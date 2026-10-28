@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dalefon - Página en Proceso</title>
+  <title>Dalefon - Azul (Llamadas)</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -11,44 +11,14 @@
       darkMode: 'class',
       theme: {
         extend: {
-          colors: {
-            dalefon: '#3C1053',
-            'dalefon-cyan': '#00E5FF'
-          },
           animation: {
             'fade-in': 'fadeIn 0.5s ease-out',
-            'drive': 'drive 3s ease-in-out infinite alternate',
-            'hammer': 'hammer 0.4s ease-in-out infinite alternate',
-            'scoop': 'scoop 3s ease-in-out infinite alternate',
-            'wheel': 'wheel 3s linear infinite alternate',
-            'float': 'float 2s ease-in-out infinite alternate'
+            'spin-slow': 'spin 2s linear infinite',
           },
           keyframes: {
             fadeIn: {
               '0%': { opacity: '0', transform: 'translateY(10px)' },
               '100%': { opacity: '1', transform: 'translateY(0)' },
-            },
-            drive: {
-              '0%': { transform: 'translateX(0)' },
-              '100%': { transform: 'translateX(-40px)' }
-            },
-            scoop: {
-              '0%': { transform: 'rotate(0deg)' },
-              '30%': { transform: 'rotate(0deg)' },
-              '80%': { transform: 'rotate(-45deg)' },
-              '100%': { transform: 'rotate(-45deg)' }
-            },
-            hammer: {
-              '0%': { transform: 'rotate(-20deg)' },
-              '100%': { transform: 'rotate(60deg)' }
-            },
-            wheel: {
-              '0%': { transform: 'rotate(0deg)' },
-              '100%': { transform: 'rotate(360deg)' }
-            },
-            float: {
-              '0%': { transform: 'translateY(0px)' },
-              '100%': { transform: 'translateY(-10px)' }
             }
           }
         }
@@ -60,11 +30,11 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-[#FDFDFF] dark:bg-slate-900 transition-colors duration-300 overflow-x-hidden">
+<body class="bg-[#FDFDFF] dark:bg-slate-900 transition-colors duration-300">
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState } = React;
+    const { useState, useEffect } = React;
 
     const IconSvg = ({ children, className = "w-5 h-5", size, strokeWidth = "2", ...props }) => (
       <svg
@@ -84,36 +54,70 @@
       </svg>
     );
 
+    const Phone = (props) => <IconSvg {...props}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></IconSvg>;
+    const ArrowLeft = (props) => <IconSvg {...props}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></IconSvg>;
     const Moon = (props) => <IconSvg {...props}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></IconSvg>;
     const Sun = (props) => <IconSvg {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconSvg>;
-    const ArrowLeft = (props) => <IconSvg {...props}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></IconSvg>;
+    const RefreshCw = (props) => <IconSvg {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></IconSvg>;
+    const Star = (props) => <IconSvg {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></IconSvg>;
 
     function App() {
       const [isDarkMode, setIsDarkMode] = useState(false);
+      const [dashLoading, setDashLoading] = useState(false);
+      const [dashMes, setDashMes] = useState("");
+      const [llamadasRawData, setLlamadasRawData] = useState(null);
+      const [fetchError, setFetchError] = useState(null);
+
+      const fetchRealData = async () => {
+        setDashLoading(true);
+        setFetchError(null);
+        try {
+          const response = await fetch("https://script.google.com/macros/s/AKfycbyOF0suZ4INbrCBN0tQvQ3nXLe1pLUIJR5LbfjkkqtffnLhPFkU7m0VhaP3c9yYOWUp/exec");
+          const json = await response.json();
+
+          if (json.status === "success") {
+            if (json.dashboard) {
+              setDashMes(json.dashboard.mes || "");
+              setLlamadasRawData(json.llamadas || []);
+            } else if (json.data) {
+              setDashMes(json.mes);
+            }
+          } else {
+            setFetchError("Error en la estructura de datos. Verifica tu Google Sheet.");
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          setFetchError("Error al conectar con Google Sheets.");
+        } finally {
+          setDashLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        fetchRealData();
+      }, []);
+
+      const formatMax3 = (val) => {
+        if (typeof val === 'number') return Number.isInteger(val) ? val : parseFloat(val.toFixed(3));
+        if (typeof val === 'string' && !isNaN(val) && val.includes('.')) return parseFloat(parseFloat(val).toFixed(3));
+        return val;
+      };
 
       return (
         <div className={`${isDarkMode ? 'dark' : ''}`}>
-          <div className="min-h-screen flex flex-col bg-[#FDFDFF] dark:bg-slate-900 font-sans selection:bg-cyan-100 selection:text-[#3C1053] transition-colors duration-300">
+          <div className="min-h-screen bg-[#FDFDFF] dark:bg-slate-900 font-sans selection:bg-cyan-100 selection:text-[#3C1053] transition-colors duration-300">
             
-            {/* Navbar original mantenido */}
-            <nav className="bg-[#3C1053] dark:bg-slate-950 py-6 px-8 sticky top-0 z-50 shadow-2xl transition-colors w-full">
+            {/* Navbar */}
+            <nav className="bg-[#3C1053] dark:bg-slate-950 py-6 px-8 sticky top-0 z-50 shadow-2xl print:hidden transition-colors">
               <div className="max-w-7xl mx-auto flex justify-between items-center px-4">
-                <div className="flex items-center space-x-4 md:space-x-8">
-                  {/* Botón de Regresar */}
-                  <a href="https://dalefonformulario.github.io/DashboardHeidi-/" className="text-white hover:text-[#00E5FF] transition-all flex items-center space-x-2 group bg-white/10 px-3 py-2 rounded-lg hover:bg-white/20">
-                    <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                    <span className="font-bold text-sm uppercase tracking-wider hidden sm:inline">Regresar</span>
-                  </a>
-                  
-                  <div className="flex flex-col">
-                    <span className="text-white text-4xl font-bold lowercase tracking-tighter leading-none">
-                      dalefon<span className="text-[12px] relative -top-3 font-black">®</span>
-                    </span>
-                    <span className="text-cyan-400 text-[10px] font-bold tracking-[0.25em] uppercase mt-1.5 ml-1">
-                      la telefonía morada
-                    </span>
-                  </div>
-                </div>
+                <a href="index.html" className="flex flex-col cursor-pointer hover:opacity-90 transition-opacity">
+                  <span className="text-white text-4xl font-bold lowercase tracking-tighter leading-none">
+                    dalefon<span className="text-[12px] relative -top-3 font-black">®</span>
+                  </span>
+                  <span className="text-cyan-400 text-[10px] font-bold tracking-[0.25em] uppercase mt-1.5 ml-1">
+                    la telefonía morada
+                  </span>
+                </a>
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className="text-white p-2 rounded-full hover:bg-white/20 transition-all focus:outline-none"
@@ -123,169 +127,244 @@
               </div>
             </nav>
 
-            {/* Contenido Principal */}
-            <main className="flex-1 flex flex-col items-center justify-center p-6 animate-fade-in w-full">
-              
-              {/* Mensaje de Construcción */}
-              <div className="text-center mb-10 mt-8">
-                <h1 className="text-5xl md:text-7xl font-black text-[#3C1053] dark:text-white tracking-tighter mb-4">
-                  PÁGINA EN <span className="text-[#00E5FF] inline-block animate-float">PROCESO</span>
-                </h1>
-                <p className="text-xl md:text-2xl text-gray-500 dark:text-gray-400 font-semibold max-w-2xl mx-auto">
-                  Estamos construyendo algo increíble. Vuelve pronto para descubrir las novedades.
-                </p>
+            {/* Main Content */}
+            <main className="py-12 animate-fade-in max-w-[95%] mx-auto px-4 pb-20">
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 print:hidden">
+                <a href="index.html" className="flex w-max items-center text-gray-500 dark:text-gray-400 font-bold hover:text-[#00E5FF] transition-colors">
+                  <ArrowLeft className="mr-2 w-6 h-6" /> Volver al Dashboard
+                </a>
+
+                <button
+                  onClick={fetchRealData}
+                  disabled={dashLoading}
+                  className="flex w-max items-center bg-white dark:bg-slate-800 border-2 border-cyan-100 dark:border-slate-700 px-6 py-3 rounded-full text-[#0097A7] dark:text-cyan-300 font-black text-sm uppercase tracking-wider hover:shadow-lg hover:border-[#00E5FF] transition-all disabled:opacity-50"
+                >
+                  actualiza tus datos dalefonescos
+                  <RefreshCw className={`ml-3 w-5 h-5 text-[#00E5FF] ${dashLoading ? 'animate-spin' : ''}`} />
+                </button>
               </div>
 
-              {/* Ilustración Animada (SVG Puro) */}
-              <div className="w-full max-w-4xl h-64 md:h-96 relative flex justify-center items-end">
-                <svg viewBox="0 0 1000 400" className="w-full h-full drop-shadow-xl" preserveAspectRatio="xMidYMax meet">
-                  
-                  {/* Cielo / Fondo (Opcional, sin relleno para mantener limpieza) */}
-                  <g className="dark:opacity-20 opacity-10">
-                    <circle cx="200" cy="80" r="30" fill="#3C1053" />
-                    <rect x="100" y="80" width="60" height="20" rx="10" fill="#3C1053" />
-                    <rect x="120" y="60" width="50" height="20" rx="10" fill="#3C1053" />
-                  </g>
+              {dashLoading && (!llamadasRawData || llamadasRawData.length === 0) ? (
+                <div className="flex flex-col items-center justify-center py-20 text-cyan-600">
+                  <RefreshCw className="animate-spin-slow w-12 h-12 mb-4" />
+                  <p className="font-bold">Descargando matriz de llamadas...</p>
+                </div>
+              ) : fetchError ? (
+                <div className="text-center py-10 text-red-500 font-bold">{fetchError}</div>
+              ) : !llamadasRawData || llamadasRawData.length === 0 ? (
+                <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-gray-100">
+                  <p className="text-gray-500 font-bold text-lg">Aún no hay datos de llamadas cargados.</p>
+                </div>
+              ) : (
+                (() => {
+                  try {
+                    // CORTAMOS LAS FILAS DE AZUL
+                    const tableData = llamadasRawData.slice(13, 32);
 
-                  {/* Piso */}
-                  <rect x="0" y="350" width="1000" height="50" className="fill-[#3C1053] dark:fill-slate-800 transition-colors" />
-                  <rect x="0" y="340" width="1000" height="10" className="fill-[#00E5FF] opacity-80" />
+                    let execName = "Ejecutivo";
+                    const nameRow = tableData[1] || [];
+                    const foundName = nameRow.find(c => typeof c === 'string' && c.trim() !== "" && c.toLowerCase() !== "nombre del ejecutivo");
+                    if (foundName) execName = foundName;
 
-                  {/* Persona 1: Martillando (Izquierda) */}
-                  <g transform="translate(30, 210)">
-                    {/* Cuerpo */}
-                    <rect x="15" y="30" width="30" height="50" rx="10" fill="#00E5FF" />
-                    {/* Piernas */}
-                    <rect x="15" y="70" width="10" height="60" fill="#3C1053" />
-                    <rect x="35" y="70" width="10" height="60" fill="#3C1053" />
-                    {/* Cabeza */}
-                    <circle cx="30" cy="15" r="15" fill="#fcd34d" />
-                    {/* Casco */}
-                    <path d="M 12 15 A 15 15 0 0 1 48 15 Z" fill="#f59e0b" />
-                    {/* Brazo Estático */}
-                    <rect x="35" y="35" width="10" height="30" rx="5" fill="#00E5FF" transform="rotate(-20 40 40)" />
-                    {/* Brazo Animado con Martillo */}
-                    <g className="animate-hammer" style={{ transformOrigin: '20px 40px' }}>
-                      <rect x="10" y="35" width="40" height="10" rx="5" fill="#0ea5e9" />
-                      {/* Martillo */}
-                      <rect x="40" y="15" width="6" height="30" fill="#78350f" />
-                      <rect x="35" y="15" width="20" height="12" rx="2" fill="#94a3b8" />
-                    </g>
-                  </g>
+                    const headerRow = tableData[0] || [];
+                    const weeks = [5, 9, 13, 17].map((idx, i) => {
+                      const val = headerRow[idx] || "";
+                      return val.split(" del ")[0] || `Semana ${i + 1}`;
+                    });
 
-                  {/* Persona 2: Sosteniendo plano */}
-                  <g transform="translate(150, 220)">
-                    {/* Piernas */}
-                    <rect x="10" y="60" width="12" height="60" fill="#3C1053" />
-                    <rect x="38" y="60" width="12" height="60" fill="#3C1053" />
-                    {/* Cuerpo */}
-                    <rect x="10" y="20" width="40" height="50" rx="8" fill="#c026d3" />
-                    {/* Chaleco reflectante */}
-                    <path d="M 15 20 L 25 50 L 35 20 Z" fill="#facc15" />
-                    {/* Cabeza */}
-                    <circle cx="30" cy="5" r="14" fill="#fcd34d" />
-                    {/* Casco */}
-                    <path d="M 14 5 A 14 14 0 0 1 46 5 Z" fill="#f59e0b" />
-                    {/* Plano */}
-                    <rect x="-10" y="35" width="50" height="35" fill="#e0f2fe" stroke="#0284c7" strokeWidth="2" transform="rotate(-10)" />
-                    <line x1="-5" y1="45" x2="30" y2="45" stroke="#0284c7" strokeWidth="2" transform="rotate(-10)" />
-                    <line x1="-5" y1="55" x2="20" y2="55" stroke="#0284c7" strokeWidth="2" transform="rotate(-10)" />
-                    {/* Brazos sosteniendo plano */}
-                    <rect x="5" y="25" width="10" height="30" rx="5" fill="#c026d3" transform="rotate(30 10 25)" />
-                    <rect x="45" y="25" width="10" height="30" rx="5" fill="#c026d3" transform="rotate(-40 45 25)" />
-                  </g>
+                    const criteriaRows = tableData.slice(3, 17);
+                    const linkRow = tableData[2] || [];
+                    const totalCallRow = tableData[17] || [];
+                    const totalWeekRow = tableData[18] || [];
 
-                  {/* Material de Construcción (Montículo de Tierra / Escombros) */}
-                  <g transform="translate(280, 260)">
-                    <path d="M 0 80 Q 50 0 100 80 Z" fill="#8B4513" />
-                    <path d="M -30 80 Q 30 20 80 80 Z" fill="#A0522D" />
-                    {/* Piedras */}
-                    <circle cx="20" cy="70" r="5" fill="#78716c" />
-                    <circle cx="70" cy="65" r="8" fill="#57534e" />
-                    <circle cx="40" cy="50" r="6" fill="#78716c" />
-                  </g>
-
-                  {/* Tractocamión / Retroexcavadora (En el piso, mirando a la izq) */}
-                  <g className="animate-drive" transform="translate(470, 175)">
-                    {/* Cabina */}
-                    <rect x="70" y="40" width="80" height="70" rx="10" fill="#facc15" />
-                    <rect x="80" y="50" width="40" height="30" rx="5" fill="#e0f2fe" /> {/* Ventana */}
-                    <circle cx="100" cy="65" r="8" fill="#3C1053" /> {/* Operador (Cabeza) */}
+                    // CALCULAR PROMEDIO GLOBAL (Sumar los 4 porcentajes y dividir entre 4)
+                    let sumScore = 0;
+                    let validWeeks = 0;
+                    [5, 9, 13, 17].forEach(startIdx => {
+                      let val = totalWeekRow[startIdx] || totalWeekRow[startIdx + 1] || totalWeekRow[startIdx + 2];
+                      if (typeof val === 'number') {
+                        sumScore += val;
+                        validWeeks++;
+                      } else if (typeof val === 'string' && val.includes('%')) {
+                        sumScore += parseFloat(val) / 100;
+                        validWeeks++;
+                      }
+                    });
                     
-                    {/* Cuerpo Principal */}
-                    <rect x="10" y="80" width="140" height="50" rx="10" fill="#eab308" />
-                    
-                    {/* Escape */}
-                    <rect x="120" y="20" width="10" height="30" fill="#94a3b8" />
-                    <circle cx="125" cy="15" r="8" fill="#cbd5e1" className="animate-float" />
-                    <circle cx="125" cy="-5" r="12" fill="#cbd5e1" className="animate-float opacity-50" style={{ animationDelay: '0.5s' }} />
+                    const finalAverage = validWeeks > 0 ? parseFloat((sumScore / validWeeks) * 100).toFixed(2) + '%' : '0.00%';
 
-                    {/* Brazo y Pala (Scoop Animado) */}
-                    <g transform="translate(10, 100)">
-                      <g className="animate-scoop" style={{ transformOrigin: '40px 10px' }}>
-                        {/* Brazo */}
-                        <rect x="-80" y="-10" width="120" height="15" rx="5" fill="#3C1053" />
-                        {/* Pala */}
-                        <path d="M -100 -30 L -70 -30 L -60 10 L -100 10 Z" fill="#94a3b8" />
-                        <path d="M -105 -20 L -100 -20 L -100 10 L -105 10 Z" fill="#64748b" /> {/* Dientes */}
-                      </g>
-                    </g>
+                    return (
+                      <div className="space-y-8 animate-fade-in relative">
+                        {/* BOTÓN/INSIGNIA DE PROMEDIO GLOBAL FLOTANTE */}
+                        <div className="absolute top-0 right-0 hidden md:flex bg-white dark:bg-slate-800 border-2 border-[#00E5FF] shadow-xl rounded-2xl p-4 items-center space-x-4 transform hover:scale-105 transition-transform z-10">
+                          <div className="bg-[#3C1053] p-3 rounded-xl text-[#00E5FF]">
+                            <Star size={24} className="animate-pulse" fill="currentColor" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Calificación Global</p>
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-1">de Llamadas</p>
+                            <p className="text-3xl font-black text-[#3C1053] dark:text-white leading-none">{finalAverage}</p>
+                          </div>
+                        </div>
 
-                    {/* Llantas con rotación */}
-                    <g transform="translate(40, 140)">
-                      <g className="animate-wheel" style={{ transformOrigin: '0 0' }}>
-                        <circle cx="0" cy="0" r="25" fill="#1e293b" />
-                        <circle cx="0" cy="0" r="15" fill="#475569" />
-                        <circle cx="0" cy="0" r="5" fill="#cbd5e1" />
-                      </g>
-                    </g>
-                    <g transform="translate(120, 140)">
-                      <g className="animate-wheel" style={{ transformOrigin: '0 0' }}>
-                        <circle cx="0" cy="0" r="25" fill="#1e293b" />
-                        <circle cx="0" cy="0" r="15" fill="#475569" />
-                        <circle cx="0" cy="0" r="5" fill="#cbd5e1" />
-                      </g>
-                    </g>
-                  </g>
+                        {/* TÍTULOS ELEGANTES */}
+                        <div className="text-center md:text-left space-y-2 mb-10 pt-4 md:pt-0 pr-0 md:pr-64">
+                          <h2 className="text-4xl md:text-5xl font-black text-[#3C1053] dark:text-fuchsia-50 tracking-tighter">
+                            Bienvenida {execName}
+                          </h2>
+                          <h3 className="text-2xl font-bold text-gray-500 dark:text-gray-400">
+                            Este es tu reporte de llamadas del mes de <span className="text-[#00E5FF] font-black uppercase">{dashMes || 'Mes no detectado'}</span>
+                          </h3>
+                          
+                          {/* Versión móvil del promedio */}
+                          <div className="md:hidden mt-6 flex justify-center">
+                             <div className="bg-white dark:bg-slate-800 border-2 border-[#00E5FF] shadow-lg rounded-2xl p-4 flex items-center space-x-4">
+                                <div className="bg-[#3C1053] p-2 rounded-xl text-[#00E5FF]">
+                                  <Star size={20} fill="currentColor" />
+                                </div>
+                                <div className="text-left">
+                                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">Calificación Global</p>
+                                  <p className="text-2xl font-black text-[#3C1053] dark:text-white leading-none mt-1">{finalAverage}</p>
+                                </div>
+                             </div>
+                          </div>
+                        </div>
 
-                  {/* Edificio en Obra Negra (Derecha) */}
-                  <g transform="translate(680, 50)">
-                    {/* Grúa Torre */}
-                    <rect x="120" y="0" width="12" height="100" fill="#facc15" />
-                    <rect x="10" y="20" width="180" height="12" fill="#facc15" />
-                    <line x1="120" y1="0" x2="10" y2="20" stroke="#ca8a04" strokeWidth="2" />
-                    <line x1="132" y1="0" x2="190" y2="20" stroke="#ca8a04" strokeWidth="2" />
-                    <rect x="170" y="15" width="20" height="25" fill="#3C1053" /> {/* Contrapeso */}
-                    
-                    {/* Cable y viga colgando */}
-                    <line x1="40" y1="32" x2="40" y2="120" stroke="#475569" strokeWidth="2" strokeDasharray="4" className="animate-float" />
-                    <rect x="10" y="120" width="60" height="10" fill="#00E5FF" className="animate-float" />
-                    <circle cx="40" cy="120" r="4" fill="#3C1053" className="animate-float" /> {/* Unión gancho */}
+                        {/* TABLA PRINCIPAL */}
+                        <div className="bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl border-t-[8px] border-[#00E5FF] overflow-hidden">
+                          <div className="overflow-x-auto custom-scrollbar pb-2">
+                            <table className="w-full text-[13px] md:text-sm border-collapse min-w-[1200px]">
+                              <thead>
+                                <tr>
+                                  <th colSpan="2" className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 min-w-[350px]"></th>
+                                  <th colSpan="3" className="bg-[#9900ff] text-white font-bold py-4 text-center text-lg rounded-tl-2xl">{weeks[0]}</th>
+                                  <th className="w-2 bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700"></th>
+                                  <th colSpan="3" className="bg-[#9900ff] text-white font-bold py-4 text-center text-lg">{weeks[1]}</th>
+                                  <th className="w-2 bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700"></th>
+                                  <th colSpan="3" className="bg-[#9900ff] text-white font-bold py-4 text-center text-lg">{weeks[2]}</th>
+                                  <th className="w-2 bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700"></th>
+                                  <th colSpan="3" className="bg-[#9900ff] text-white font-bold py-4 text-center text-lg rounded-tr-2xl">{weeks[3]}</th>
+                                </tr>
+                                <tr>
+                                  <th colSpan="2" className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700"></th>
+                                  {[5, 9, 13, 17].map((startIdx, i) => (
+                                    <React.Fragment key={i}>
+                                      <th className="bg-[#3C1053] text-fuchsia-200 font-bold text-xs uppercase tracking-wider text-center py-3 px-2 border-r border-fuchsia-900/50 w-24">Tel. llamada 1</th>
+                                      <th className="bg-[#3C1053] text-fuchsia-200 font-bold text-xs uppercase tracking-wider text-center py-3 px-2 border-r border-fuchsia-900/50 w-24">Tel. llamada 2</th>
+                                      <th className="bg-[#3C1053] text-fuchsia-200 font-bold text-xs uppercase tracking-wider text-center py-3 px-2 w-24">Tel. llamada 3</th>
+                                      {i < 3 && <th className="w-2 bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700"></th>}
+                                    </React.Fragment>
+                                  ))}
+                                </tr>
+                                <tr>
+                                  <th colSpan="2" className="bg-gray-50 dark:bg-slate-800/80 border-b border-gray-200 dark:border-slate-700 py-4 px-6 text-left font-black text-[#3C1053] dark:text-fuchsia-300 uppercase tracking-widest text-xs">
+                                    Audios de evaluación
+                                  </th>
+                                  {[5, 9, 13, 17].map((startIdx, i) => (
+                                    <React.Fragment key={i}>
+                                      {[0, 1, 2].map(offset => {
+                                        const url = linkRow[startIdx + offset];
+                                        const isUrl = typeof url === 'string' && url.startsWith('http');
+                                        return (
+                                          <td key={offset} className="bg-cyan-50/50 dark:bg-cyan-900/10 text-center py-3 px-2 border-r border-cyan-100 dark:border-cyan-900/30 border-b border-cyan-100 dark:border-cyan-900/30">
+                                            {isUrl ? (
+                                              <a href={url} target="_blank" rel="noreferrer" className="text-[#0097A7] dark:text-[#00E5FF] hover:text-cyan-600 underline font-bold text-xs bg-cyan-100/50 dark:bg-cyan-900/50 py-1.5 px-3 rounded-lg inline-flex items-center transition-colors shadow-sm">
+                                                Escuchar
+                                              </a>
+                                            ) : <span className="text-gray-400 text-xs">-</span>}
+                                          </td>
+                                        )
+                                      })}
+                                      {i < 3 && <td className="w-2 bg-gray-100 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700"></td>}
+                                    </React.Fragment>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {criteriaRows.map((row, idx) => {
+                                  // Separador inteligente de número y texto
+                                  const rawText = row[1] || row[2] || row[3] || row[4] || row[0] || "";
+                                  const match = rawText.toString().match(/^([\d.]+)\s*(.*)/);
+                                  const num = match ? match[1] : (row[0] || "-");
+                                  const text = match ? match[2] : rawText;
 
-                    {/* Vigas verticales del edificio (Apoyadas en el piso, Altura total al piso = 190) */}
-                    <rect x="40" y="100" width="16" height="190" fill="#3C1053" />
-                    <rect x="110" y="100" width="16" height="190" fill="#3C1053" />
-                    <rect x="180" y="100" width="16" height="190" fill="#3C1053" />
-                    <rect x="250" y="100" width="16" height="190" fill="#3C1053" />
+                                  return (
+                                    <tr key={idx} className="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50/50 dark:hover:bg-slate-700/30 transition-colors">
+                                      <td colSpan="2" className="p-4 border-r border-gray-200 dark:border-slate-700">
+                                        <div className="flex items-start space-x-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-600 shadow-sm hover:border-[#00E5FF] group transition-all cursor-default max-w-sm">
+                                          <div className="bg-gradient-to-br from-[#3C1053] to-[#5a187d] group-hover:from-[#00E5FF] group-hover:to-[#0097A7] text-white font-black text-sm w-12 h-12 rounded-xl shadow-md flex items-center justify-center flex-shrink-0 transition-colors duration-300">
+                                            {num}
+                                          </div>
+                                          <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300 leading-snug break-words overflow-hidden">{text}</span>
+                                        </div>
+                                      </td>
+                                      {[5, 9, 13, 17].map((startIdx, i) => (
+                                        <React.Fragment key={i}>
+                                          {[0, 1, 2].map(offset => (
+                                            <td key={offset} className="text-center font-bold text-gray-700 dark:text-gray-300 border-r border-gray-100 dark:border-slate-700 p-3 bg-white dark:bg-slate-800/50">
+                                              {formatMax3(row[startIdx + offset])}
+                                            </td>
+                                          ))}
+                                          {i < 3 && <td className="w-2 bg-gray-100 dark:bg-slate-900"></td>}
+                                        </React.Fragment>
+                                      ))}
+                                    </tr>
+                                  )
+                                })}
 
-                    {/* Losas horizontales */}
-                    <rect x="30" y="140" width="246" height="12" fill="#94a3b8" />
-                    <rect x="30" y="200" width="246" height="12" fill="#94a3b8" />
-                    <rect x="30" y="260" width="246" height="12" fill="#94a3b8" />
+                                <tr className="bg-[#d9d2e9] dark:bg-purple-900/40 border-t-[4px] border-purple-300 dark:border-purple-500/50">
+                                  <td colSpan="2" className="p-5 border-r border-purple-200 dark:border-purple-800 font-black text-[#3C1053] dark:text-purple-100 text-right uppercase tracking-wider text-sm">
+                                    Puntaje total por llamada
+                                  </td>
+                                  {[5, 9, 13, 17].map((startIdx, i) => (
+                                    <React.Fragment key={i}>
+                                      {[0, 1, 2].map(offset => (
+                                        <td key={offset} className="text-center font-black text-[#3C1053] dark:text-purple-100 border-r border-purple-200 dark:border-purple-800 p-3 text-lg">
+                                          {formatMax3(totalCallRow[startIdx + offset])}
+                                        </td>
+                                      ))}
+                                      {i < 3 && <td className="w-2 bg-gray-100 dark:bg-slate-900 border-r border-purple-200 dark:border-purple-800"></td>}
+                                    </React.Fragment>
+                                  ))}
+                                </tr>
 
-                    {/* Andamios transversales (decorativos con colores de la marca) */}
-                    <line x1="56" y1="152" x2="110" y2="200" stroke="#c026d3" strokeWidth="3" />
-                    <line x1="110" y1="152" x2="56" y2="200" stroke="#c026d3" strokeWidth="3" />
-                    
-                    <line x1="126" y1="212" x2="180" y2="260" stroke="#00E5FF" strokeWidth="3" />
-                    <line x1="180" y1="212" x2="126" y2="260" stroke="#00E5FF" strokeWidth="3" />
+                                <tr className="bg-[#3C1053] dark:bg-[#2A0B3A] border-t-[6px] border-[#7B1FA2]">
+                                  <td colSpan="2" className="p-6 border-r border-fuchsia-900/50 font-black text-white text-right uppercase tracking-widest text-sm">
+                                    Puntaje total por semana
+                                  </td>
+                                  {[5, 9, 13, 17].map((startIdx, i) => {
+                                    let val = totalWeekRow[startIdx] || totalWeekRow[startIdx + 1] || totalWeekRow[startIdx + 2];
+                                    if (typeof val === 'number') { val = parseFloat((val * 100).toFixed(2)) + '%'; }
+                                    return (
+                                      <React.Fragment key={i}>
+                                        <td colSpan="3" className="text-center font-black text-[#FF0000] dark:text-red-500 p-5 text-2xl border-r border-fuchsia-900/50 tracking-wider shadow-inner bg-black/10">
+                                          {val}
+                                        </td>
+                                        {i < 3 && <td className="w-2 bg-gray-800 dark:bg-slate-900 border-r border-fuchsia-900/50"></td>}
+                                      </React.Fragment>
+                                    )
+                                  })}
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  } catch (error) {
+                    return <div className="text-center font-bold text-red-500 p-10 bg-red-50 rounded-2xl border border-red-200 m-10">Ocurrió un error al procesar la tabla: <br /> <strong>{error.message}</strong></div>;
+                  }
+                })()
+              )}
 
-                    <line x1="196" y1="152" x2="250" y2="200" stroke="#c026d3" strokeWidth="3" />
-                    <line x1="250" y1="152" x2="196" y2="200" stroke="#c026d3" strokeWidth="3" />
-                  </g>
-
-                </svg>
-              </div>
+              <style>{`
+                .custom-scrollbar::-webkit-scrollbar { height: 12px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid #f1f5f9; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #00E5FF; }
+                .dark .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border: 3px solid #0f172a; }
+              `}</style>
             </main>
           </div>
         </div>
