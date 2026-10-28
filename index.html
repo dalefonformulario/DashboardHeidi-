@@ -96,7 +96,7 @@
       const [isDarkMode, setIsDarkMode] = useState(false);
       
       // Estados de Seguridad
-      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('dalefon_auth') === 'true');
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
       const [loginError, setLoginError] = useState(false);
@@ -115,8 +115,8 @@
       // ==========================================
       // ESTADOS DEL RELOJ CHECADOR
       // ==========================================
-      const [shiftState, setShiftState] = useState('idle'); // idle, active, paused
-      const [shiftSeconds, setShiftSeconds] = useState(0);
+      const [shiftState, setShiftState] = useState(() => localStorage.getItem('dalefon_shift_state') || 'idle'); // idle, active, paused
+      const [shiftSeconds, setShiftSeconds] = useState(() => parseInt(localStorage.getItem('dalefon_shift_seconds')) || 0);
       const [showTrackerAuth, setShowTrackerAuth] = useState(false);
       const [trackerPassword, setTrackerPassword] = useState('');
       const [trackerError, setTrackerError] = useState(false);
@@ -126,14 +126,22 @@
 
       const handleLogin = (e) => {
         e.preventDefault();
-        if ((email === 'heidi.cienfuegos@dalefon.mx' && password === 'Paola161218') || 
+        if ((email === 'heidi.cienfuegos@dalefon.mx' && password === 'Henacifl65') || 
             (email === 'admin' && password === 'admind')) {
           setIsAuthenticated(true);
+          localStorage.setItem('dalefon_auth', 'true');
           setLoginError(false);
         } else {
           setLoginError(true);
           setTimeout(() => setLoginError(false), 500);
         }
+      };
+
+      const handleLogout = (e) => {
+        e.preventDefault();
+        localStorage.removeItem('dalefon_auth');
+        setIsAuthenticated(false);
+        window.location.href = "https://dalefonformulario.github.io/Paneldedesviacion1/";
       };
 
       const registrarMovimiento = (accion, segundosActuales) => {
@@ -145,13 +153,29 @@
         fetch(url, { mode: 'no-cors' }).catch(err => console.log("Error de conexión al reloj:", err));
       };
 
-      // Efecto del contador de tiempo
+      // Efecto del contador de tiempo con persistencia
       useEffect(() => {
         let interval;
         if (shiftState === 'active') {
+          // Recuperar tiempo perdido si la página se recargó
+          const lastTick = localStorage.getItem('dalefon_last_tick');
+          if (lastTick) {
+            const missedSeconds = Math.floor((Date.now() - parseInt(lastTick)) / 1000);
+            if (missedSeconds > 0) {
+              setShiftSeconds(s => s + missedSeconds);
+            }
+          }
+
           interval = setInterval(() => {
-            setShiftSeconds(s => s + 1);
+            setShiftSeconds(s => {
+              const newSeconds = s + 1;
+              localStorage.setItem('dalefon_shift_seconds', newSeconds.toString());
+              return newSeconds;
+            });
+            localStorage.setItem('dalefon_last_tick', Date.now().toString());
           }, 1000);
+        } else if (shiftState === 'paused') {
+          localStorage.setItem('dalefon_shift_state', 'paused');
         }
         return () => clearInterval(interval);
       }, [shiftState]);
@@ -165,8 +189,11 @@
 
       const handleTrackerLogin = (e) => {
         e.preventDefault();
-        if (trackerPassword === 'Paola161218' || trackerPassword === 'admind') {
+        if (trackerPassword === 'Henacifl65' || trackerPassword === 'admind') {
           setShiftState('active');
+          localStorage.setItem('dalefon_shift_state', 'active');
+          localStorage.setItem('dalefon_shift_seconds', '0');
+          localStorage.setItem('dalefon_last_tick', Date.now().toString());
           setShowTrackerAuth(false);
           registrarMovimiento('Entrada', 0);
           setTrackerError(false);
@@ -278,16 +305,35 @@
                     <h3 className="text-xl font-black text-slate-800 dark:text-white mb-6">Control de Turno</h3>
                     <div className="space-y-4">
                         {shiftState === 'active' && (
-                            <button onClick={() => { setShiftState('paused'); setShowTrackerAction(false); registrarMovimiento('Inicio Comida', shiftSeconds); }} className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
+                            <button onClick={() => { 
+                                setShiftState('paused'); 
+                                localStorage.setItem('dalefon_shift_state', 'paused');
+                                setShowTrackerAction(false); 
+                                registrarMovimiento('Inicio Comida', shiftSeconds); 
+                            }} className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
                                 <Clock size={18} /> Pausar (Ir a comer)
                             </button>
                         )}
                         {shiftState === 'paused' && (
-                            <button onClick={() => { setShiftState('active'); setShowTrackerAction(false); registrarMovimiento('Regreso Comida', shiftSeconds); }} className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
+                            <button onClick={() => { 
+                                localStorage.setItem('dalefon_last_tick', Date.now().toString());
+                                setShiftState('active'); 
+                                localStorage.setItem('dalefon_shift_state', 'active');
+                                setShowTrackerAction(false); 
+                                registrarMovimiento('Regreso Comida', shiftSeconds); 
+                            }} className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
                                 <Clock size={18} /> Regresar de comer
                             </button>
                         )}
-                        <button onClick={() => { setShiftState('idle'); setShowTrackerAction(false); registrarMovimiento('Fin de Turno', shiftSeconds); setShiftSeconds(0); }} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
+                        <button onClick={() => { 
+                            setShiftState('idle'); 
+                            localStorage.removeItem('dalefon_shift_state');
+                            localStorage.removeItem('dalefon_shift_seconds');
+                            localStorage.removeItem('dalefon_last_tick');
+                            setShowTrackerAction(false); 
+                            registrarMovimiento('Fin de Turno', shiftSeconds); 
+                            setShiftSeconds(0); 
+                        }} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
                             <LogOut size={18} /> Finalizar Turno
                         </button>
                     </div>
@@ -410,6 +456,7 @@
                   {isAuthenticated && (
                     <a
                       href="https://dalefonformulario.github.io/Paneldedesviacion1/"
+                      onClick={handleLogout}
                       className="flex items-center bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all border border-red-400 shadow-md"
                       title="Cerrar Sesión"
                     >
@@ -435,7 +482,7 @@
                 
                 {/* 1. DASHBOARD GENERAL */}
                 <a
-                  href="DHDoardHeidi.html"
+                  href="https://dalefonformulario.github.io/DashboardHeidi-/"
                   className="group relative bg-white dark:bg-slate-800 border-t-[6px] border-emerald-500 rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 text-left overflow-hidden block"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 dark:bg-emerald-900/30 rounded-full -mr-10 -mt-10 opacity-60 group-hover:scale-110 transition-transform"></div>
@@ -452,7 +499,7 @@
 
                 {/* 2. CRM */}
                 <a
-                  href="CrmHeidi.html"
+                  href="https://dalefonformulario.github.io/DashboardHeidi-/"
                   className="group relative bg-white dark:bg-slate-800 border-t-[6px] border-indigo-500 rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 text-left overflow-hidden block"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/30 rounded-full -mr-10 -mt-10 opacity-60 group-hover:scale-110 transition-transform"></div>
@@ -469,7 +516,7 @@
 
                 {/* 3. ROSA (CHATS) */}
                 <a
-                  href="RosaHeidi.html"
+                  href="https://dalefonformulario.github.io/DashboardHeidi-/"
                   className="group relative bg-white dark:bg-slate-800 border-t-[6px] border-[#FF00FF] rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 text-left overflow-hidden block"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 dark:bg-pink-900/30 rounded-full -mr-10 -mt-10 opacity-60 group-hover:scale-110 transition-transform"></div>
@@ -486,7 +533,7 @@
 
                 {/* 4. AZUL (LLAMADAS) */}
                 <a
-                  href="AzulHeidi.html"
+                  href="https://dalefonformulario.github.io/DashboardHeidi-/"
                   className="group relative bg-white dark:bg-slate-800 border-t-[6px] border-[#00E5FF] rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 text-left overflow-hidden block"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-50 dark:bg-cyan-900/30 rounded-full -mr-10 -mt-10 opacity-60 group-hover:scale-110 transition-transform"></div>
@@ -503,7 +550,7 @@
 
                 {/* 5. TIEMPOS */}
                 <a
-                  href="TiemposHeidi.html"
+                  href="https://dalefonformulario.github.io/DashboardHeidi-/"
                   className="group relative bg-white dark:bg-slate-800 border-t-[6px] border-orange-500 rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 text-left overflow-hidden block"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 dark:bg-orange-900/30 rounded-full -mr-10 -mt-10 opacity-60 group-hover:scale-110 transition-transform"></div>
@@ -520,7 +567,7 @@
 
                 {/* 6. LOGROS */}
                 <a
-                  href="LogrosHeidi.html"
+                  href="https://dalefonformulario.github.io/DashboardHeidi-/"
                   className="group relative bg-white dark:bg-slate-800 border-t-[6px] border-amber-400 rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 text-left overflow-hidden block"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 dark:bg-amber-900/30 rounded-full -mr-10 -mt-10 opacity-60 group-hover:scale-110 transition-transform"></div>
