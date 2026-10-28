@@ -54,6 +54,7 @@
       </svg>
     );
 
+    const ArrowLeft = (props) => <IconSvg {...props}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></IconSvg>;
     const Moon = (props) => <IconSvg {...props}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></IconSvg>;
     const Sun = (props) => <IconSvg {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconSvg>;
     const RefreshCw = (props) => <IconSvg {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></IconSvg>;
@@ -133,11 +134,15 @@
 
             {/* Dashboard Content */}
             <main className="py-12 animate-fade-in max-w-6xl mx-auto px-4 pb-20">
-              <div className="flex justify-end mb-8 print:hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 print:hidden">
+                <a href="https://dalefonformulario.github.io/DashboardHeidi-/index.html" className="flex w-max items-center text-gray-500 dark:text-gray-400 font-bold hover:text-[#00E5FF] transition-colors">
+                  <ArrowLeft className="mr-2 w-6 h-6" /> Volver al Dashboard
+                </a>
+
                 <button
                   onClick={fetchRealData}
                   disabled={dashLoading}
-                  className="flex items-center bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-slate-700 px-6 py-3 rounded-full text-[#3C1053] dark:text-fuchsia-300 font-black text-sm uppercase tracking-wider hover:shadow-lg hover:border-[#7B1FA2] transition-all disabled:opacity-50"
+                  className="flex w-max items-center bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-slate-700 px-6 py-3 rounded-full text-[#3C1053] dark:text-fuchsia-300 font-black text-sm uppercase tracking-wider hover:shadow-lg hover:border-[#7B1FA2] transition-all disabled:opacity-50"
                 >
                   actualiza tus datos
                   <RefreshCw className={`ml-3 w-5 h-5 text-[#7B1FA2] dark:text-fuchsia-400 ${dashLoading ? 'animate-spin' : ''}`} />
